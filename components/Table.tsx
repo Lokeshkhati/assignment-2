@@ -1,32 +1,54 @@
 "use client"
 
-import { TOTAL_ITEMS_PER_PAGE, URL } from '@/constants';
+import { TOTAL_ITEMS_PER_PAGE } from '@/constants';
 import Searchbar from './Searchbar'
 import { AiOutlineDelete } from "react-icons/ai";
 import { FaRegEdit } from "react-icons/fa";
 import { TiArrowSortedDown, TiArrowSortedUp } from "react-icons/ti";
-import { useState } from 'react';
+import { useState, useLayoutEffect, useRef } from 'react';
 
 export default function Table({ data, currentPage }: any) {
 
     const [tableData, setTableData] = useState(data)
+    const checkbox = useRef(null)
+    const [checked, setChecked] = useState(false)
+    const [indeterminate, setIndeterminate] = useState(false)
+    const [selectedRows, setSelectedRows] = useState([])
 
+    useLayoutEffect(() => {
+        const isIndeterminate = selectedRows.length > 0 && selectedRows.length < tableData.length
+        setChecked(selectedRows.length === tableData.length)
+        setIndeterminate(isIndeterminate)
+        checkbox.current.indeterminate = isIndeterminate
+    }, [selectedRows])
 
+    function toggleAll() {
+        const rows = tableData.slice((currentPage - 1) * TOTAL_ITEMS_PER_PAGE, TOTAL_ITEMS_PER_PAGE * currentPage)
 
-    const checkHandler = (element: any, checkedValue: boolean) => {
-        const temp = data.map((item: any) => item.id === element.id ? { ...item, checked: checkedValue } : item)
-        setTableData(temp)
-
+        setSelectedRows(checked || indeterminate ? [] : rows)
+        setChecked(!checked && !indeterminate)
+        setIndeterminate(false)
     }
-    const selectAllHandler = (checkedValue: boolean) => {
-        const temp = data.map((item: any) => {
-            return {
-                ...item,
-                checked: checkedValue
-            }
-        })
-        setTableData(temp)
+
+    const checkHandler = (e: any, item: any) => {
+        const isChecked = e.target.checked
+
+        const rows = isChecked ? [...selectedRows, item]
+            : selectedRows.filter((row) => row !== item)
+        setSelectedRows(rows)
     }
+    const deleteTableRow = (id: number) => {
+        const updatedTableData = tableData.filter((item) => item.id !== id)
+        setTableData(updatedTableData)
+    }
+
+    const deleteMultipleRows = () => {
+        const updatedTableData = difference(tableData, selectedRows)
+        setTableData(updatedTableData)
+        toggleAll()
+    }
+
+
     return (
         <>
             <div className="sm:flex sm:items-center">
@@ -37,7 +59,7 @@ export default function Table({ data, currentPage }: any) {
                     <button
                         type="button"
                         className="block rounded-md bg-red-500 p-2 text-center text-sm font-semibold leading-6 text-white "
-                        disabled
+                        onClick={deleteMultipleRows}
                     >
                         <AiOutlineDelete size='20' />
                     </button>
@@ -52,9 +74,12 @@ export default function Table({ data, currentPage }: any) {
                                     <tr>
                                         <th scope="col" className="relative px-7 sm:w-12 sm:px-6">
                                             <input
+                                                name='all-select'
                                                 type="checkbox"
+                                                ref={checkbox}
+                                                checked={checked}
                                                 className="absolute left-4 top-1/2 -mt-2 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600"
-                                                onChange={(event: any) => selectAllHandler(event.target.checked)}
+                                                onChange={toggleAll}
                                             />
                                         </th>
                                         <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
@@ -93,9 +118,10 @@ export default function Table({ data, currentPage }: any) {
                                                 <td className="relative px-7 sm:w-12 sm:px-6">
                                                     <input
                                                         type="checkbox"
-                                                        checked={item?.checked}
+                                                        value={item.id}
                                                         className="absolute left-4 top-1/2 -mt-2 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600"
-                                                        onChange={(event: any) => checkHandler(item, event.target.checked)}
+                                                        checked={selectedRows.includes(item)}
+                                                        onChange={(e) => checkHandler(e, item)}
                                                     />
                                                 </td>
                                                 <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
@@ -111,7 +137,7 @@ export default function Table({ data, currentPage }: any) {
                                                         <button className="text-gray-800 hover:text-gray-900 border border-gray-300 rounded p-2 ">
                                                             <FaRegEdit size='20' />
                                                         </button>
-                                                        <button className="text-red-500 hover:text-red-600 border border-gray-300 rounded p-2 ">
+                                                        <button className="text-red-500 hover:text-red-600 border border-gray-300 rounded p-2  " onClick={() => deleteTableRow(item.id)}>
                                                             <AiOutlineDelete size='20' />
 
                                                         </button>
@@ -120,7 +146,6 @@ export default function Table({ data, currentPage }: any) {
                                             </tr>
                                         ))}
                                 </tbody>
-
 
                             </table>
                         </div>
