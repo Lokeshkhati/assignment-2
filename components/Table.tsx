@@ -10,7 +10,7 @@ import { difference } from "@/utils";
 export default function Table({ data, currentPage }: any) {
 
     const [tableData, setTableData] = useState(data)
-    const checkbox = useRef(null)
+    const checkbox = useRef<HTMLInputElement>(null)
     const [checked, setChecked] = useState(false)
     const [indeterminate, setIndeterminate] = useState(false)
     const [selectedRows, setSelectedRows] = useState([])
@@ -19,7 +19,9 @@ export default function Table({ data, currentPage }: any) {
         const isIndeterminate = selectedRows.length > 0 && selectedRows.length < tableData.length
         setChecked(selectedRows.length === tableData.length)
         setIndeterminate(isIndeterminate)
-        checkbox.current.indeterminate = isIndeterminate
+        if (checkbox.current) {
+            checkbox.current.indeterminate = isIndeterminate
+        }
     }, [selectedRows])
 
     function toggleAll() {
@@ -47,7 +49,6 @@ export default function Table({ data, currentPage }: any) {
         setTableData(updatedTableData)
         toggleAll()
     }
-
 
     return (
         <>
