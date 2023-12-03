@@ -6,7 +6,7 @@ import { AiOutlineDelete } from "react-icons/ai";
 import { FaRegEdit } from "react-icons/fa";
 import { TiArrowSortedDown, TiArrowSortedUp } from "react-icons/ti";
 import { useState, useLayoutEffect, useRef } from 'react';
-
+import { difference } from "@/utils";
 export default function Table({ data, currentPage }: any) {
 
     const [tableData, setTableData] = useState(data)
