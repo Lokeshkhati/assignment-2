@@ -9,6 +9,8 @@ const UserDataTable = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const { isLoading, data, error } = useFetch(URL);
 
+    console.log(data, 'data')
+
     const nextPageHandler = () => {
         setCurrentPage((currentPage) => currentPage + 1);
     };

@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react";
 
-interface TableItem {
+export interface TableItem {
     id: number,
     name: string,
     email: string,
     role: string
 
 }
-interface TableData {
+export interface TableData {
     data: TableItem[]
 }
 export const useFetch = (url: string) => {
