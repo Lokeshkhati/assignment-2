@@ -12,6 +12,7 @@ const UserDataTable = () => {
     const nextPageHandler = () => {
         setCurrentPage((currentPage) => currentPage + 1);
     };
+
     const prevPageHandler = () => {
         setCurrentPage((currentPage) => currentPage - 1);
     };
