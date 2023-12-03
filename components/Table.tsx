@@ -1,12 +1,12 @@
 "use client"
 
 import { TOTAL_ITEMS_PER_PAGE } from '@/constants';
-import Searchbar from './Searchbar'
-import { AiOutlineDelete } from "react-icons/ai";
-import { FaRegEdit } from "react-icons/fa";
-import { TiArrowSortedDown, TiArrowSortedUp } from "react-icons/ti";
-import { useState, useLayoutEffect, useRef } from 'react';
 import { difference } from "@/utils";
+import { useLayoutEffect, useRef, useState } from 'react';
+import { AiOutlineDelete } from "react-icons/ai";
+import { FaCheck, FaRegEdit } from "react-icons/fa";
+import { IoIosSearch } from "react-icons/io";
+import { TiArrowSortedDown, TiArrowSortedUp } from "react-icons/ti";
 export default function Table({ data, currentPage }: any) {
 
     const [tableData, setTableData] = useState(data)
@@ -14,6 +14,11 @@ export default function Table({ data, currentPage }: any) {
     const [checked, setChecked] = useState(false)
     const [indeterminate, setIndeterminate] = useState(false)
     const [selectedRows, setSelectedRows] = useState([])
+    const [sortType, setSortType] = useState('asc')
+    const [query, setQuery] = useState('')
+    const [editItem, setEditItem] = useState<any | null>(null);
+
+
 
     useLayoutEffect(() => {
         const isIndeterminate = selectedRows.length > 0 && selectedRows.length < tableData.length
@@ -37,24 +42,68 @@ export default function Table({ data, currentPage }: any) {
 
         const rows = isChecked ? [...selectedRows, item]
             : selectedRows.filter((row) => row !== item)
+
         setSelectedRows(rows)
     }
+
     const deleteTableRow = (id: number) => {
         const updatedTableData = tableData.filter((item) => item.id !== id)
         setTableData(updatedTableData)
     }
+    const handleSave = (id: number) => {
+        const updatedTableData = tableData.map((item: any) =>
+            item.id === id ? editItem : item
+        );
+
+        setTableData(updatedTableData);
+        setEditItem(null);
+    };
+
 
     const deleteMultipleRows = () => {
         const updatedTableData = difference(tableData, selectedRows)
         setTableData(updatedTableData)
         toggleAll()
     }
+    const getSortedTableData = (data, sortType) => {
+        if (sortType === 'asc') {
+            return [...data].sort((a, b) => a.id - b.id)
+        }
+        if (sortType === 'desc') {
+            return [...data].sort((a, b) => b.id - a.id)
+        }
+        return data
+    }
+
+    const getFilteredData = (data, query) => {
+        return query === "" ? data : data.filter(item => item.name.toLowerCase().includes(query.toLowerCase()))
+    }
+
+    const sortedData = getSortedTableData(tableData, sortType)
+    const foundData = getFilteredData(sortedData, query)
 
     return (
         <>
             <div className="sm:flex sm:items-center">
                 <div className="sm:flex-auto">
-                    <Searchbar />
+                    <div className="w-full max-w-lg lg:max-w-xs">
+                        <div className="relative">
+                            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                                <IoIosSearch className="h-5 w-5 text-gray-400" aria-hidden="true" />
+                            </div>
+                            <form onSubmit={getFilteredData} >
+                                <input
+                                    id="search"
+                                    name="search"
+                                    value={query}
+                                    onChange={(e) => setQuery(e.target.value)}
+                                    className="block w-full rounded-md border-0 bg-white py-1.5 pl-10 pr-3 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                                    placeholder="Search"
+                                    type="search"
+                                />
+                            </form>
+                        </div>
+                    </div>
                 </div>
                 <div className="mt-4 sm:ml-16 sm:mt-0 sm:flex-none">
                     <button
@@ -87,8 +136,8 @@ export default function Table({ data, currentPage }: any) {
                                             <div className='flex gap-2'>
                                                 <span>Id</span>
                                                 <div >
-                                                    {true ? <button><TiArrowSortedUp size='20' /></button> :
-                                                        <button>
+                                                    {sortType === 'asc' ? <button onClick={() => setSortType('desc')}><TiArrowSortedUp size='20' /></button> :
+                                                        <button onClick={() => setSortType('asc')}>
                                                             <TiArrowSortedDown size='20' />
                                                         </button>}
                                                 </div>
@@ -110,7 +159,7 @@ export default function Table({ data, currentPage }: any) {
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-200 bg-white">
-                                    {tableData
+                                    {foundData
                                         ?.slice(
                                             (currentPage - 1) * TOTAL_ITEMS_PER_PAGE,
                                             currentPage * TOTAL_ITEMS_PER_PAGE
@@ -129,20 +178,78 @@ export default function Table({ data, currentPage }: any) {
                                                     {item.id}
                                                 </td>
                                                 <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                                                    {item.name}
-                                                </td>
-                                                <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{item.email}</td>
-                                                <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{item.role}</td>
-                                                <td className="whitespace-nowrap py-4 pl-3 pr-4  text-sm font-medium sm:pr-3">
-                                                    <div className='flex gap-4'>
-                                                        <button className="text-gray-800 hover:text-gray-900 border border-gray-300 rounded p-2 ">
-                                                            <FaRegEdit size='20' />
-                                                        </button>
-                                                        <button className="text-red-500 hover:text-red-600 border border-gray-300 rounded p-2  " onClick={() => deleteTableRow(item.id)}>
-                                                            <AiOutlineDelete size='20' />
+                                                    {item.id === editItem?.id ? (
+                                                        <input
+                                                            className="rounded border 
+                                                            px-2 py-1 text-md text-gray-900
+                                                            border-gray-300"
+                                                            value={editItem?.name}
+                                                            onChange={(event) =>
+                                                                setEditItem({
+                                                                    ...editItem,
+                                                                    name: event.target.value,
+                                                                })
+                                                            }
+                                                        />
+                                                    ) : (
+                                                        item.name
+                                                    )}
 
-                                                        </button>
-                                                    </div>
+                                                </td>
+
+                                                <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                                                    {item.id === editItem?.id ? (
+                                                        <input
+                                                            className="rounded border 
+                                                            px-2 py-1 text-md text-gray-900 border-gray-300"
+                                                            value={editItem?.email}
+                                                            onChange={(event) =>
+                                                                setEditItem({
+                                                                    ...editItem,
+                                                                    email: event.target.value,
+                                                                })
+                                                            }
+                                                        />
+                                                    ) : (
+                                                        item.email
+                                                    )}
+
+                                                </td>
+                                                <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500"> {item.id === editItem?.id ? (
+                                                    <input
+                                                        className="rounded border 
+                                                        px-2 py-1 text-md text-gray-900 border-gray-300"
+                                                        value={editItem?.role}
+                                                        onChange={(event) =>
+                                                            setEditItem({
+                                                                ...editItem,
+                                                                role: event.target.value,
+                                                            })
+                                                        }
+                                                    />
+                                                ) : (
+                                                    item.role
+                                                )}
+                                                </td>
+                                                <td className="whitespace-nowrap py-4 pl-3 pr-4  text-sm font-medium sm:pr-3">
+                                                    {item.id === editItem?.id ? <button
+                                                        className="text-gray-800 hover:text-gray-900 border border-gray-300 rounded p-2 "
+                                                        onClick={() => handleSave(item.id)}
+                                                    >
+                                                        <FaCheck size='20' className="text-green-500" />
+                                                    </button>
+                                                        : <div className='flex gap-4'>
+                                                            <button className="text-gray-800 hover:text-gray-900 border border-gray-300 rounded p-2 "
+                                                                onClick={() => setEditItem(item)}
+
+                                                            >
+                                                                <FaRegEdit size='20' />
+                                                            </button>
+                                                            <button className="text-red-500 hover:text-red-600 border border-gray-300 rounded p-2  " onClick={() => deleteTableRow(item.id)}>
+                                                                <AiOutlineDelete size='20' />
+
+                                                            </button>
+                                                        </div>}
                                                 </td>
                                             </tr>
                                         ))}
