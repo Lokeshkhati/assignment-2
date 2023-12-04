@@ -13,7 +13,7 @@ export default function Table({ data, currentPage }: any) {
     const checkbox = useRef<HTMLInputElement>(null)
     const [checked, setChecked] = useState(false)
     const [indeterminate, setIndeterminate] = useState(false)
-    const [selectedRows, setSelectedRows] = useState([])
+    const [selectedRows, setSelectedRows] = useState<any | []>([])
     const [sortType, setSortType] = useState('asc')
     const [query, setQuery] = useState('')
     const [editItem, setEditItem] = useState<any | null>(null);
@@ -39,11 +39,11 @@ export default function Table({ data, currentPage }: any) {
 
     const checkHandler = (e: any, item: any) => {
         const isChecked = e.target.checked
-
         const rows = isChecked ? [...selectedRows, item]
             : selectedRows.filter((row) => row !== item)
 
         setSelectedRows(rows)
+
     }
 
     const deleteTableRow = (id: number) => {
