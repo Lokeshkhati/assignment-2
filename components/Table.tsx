@@ -40,7 +40,7 @@ export default function Table({ data, currentPage }: any) {
     const checkHandler = (e: any, item: any) => {
         const isChecked = e.target.checked
         const rows = isChecked ? [...selectedRows, item]
-            : selectedRows.filter((row) => row !== item)
+            : selectedRows.filter((row: any) => row !== item)
 
         setSelectedRows(rows)
 
